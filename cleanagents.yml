@@ -1,0 +1,8 @@
+---
+- hosts: agent
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: clean agents
+      file: path=/var/lib/mesos/data state=absent

@@ -1,0 +1,67 @@
+---
+
+- name: install mesos build dependencies
+  apt: name={{ item }} state=installed
+  with_items:
+    - openjdk-7-jdk
+    - autoconf
+    - libtool
+    - build-essential
+    - python-dev
+    - python-boto
+    - libcurl4-nss-dev
+    - libsasl2-dev
+    - libsasl2-modules
+    - maven
+    - libapr1-dev
+    - libsvn-dev
+
+- name: check if mesos is in /tmp
+  stat: path=/tmp/{{ mesos_file }}
+  register: st_mesos_src
+
+- name: fetch mesos and store on ansible workstation
+  local_action: command wget -P /tmp {{ download_location }}
+  become: no
+  when: st_mesos_src.stat.exists == false
+
+- name: Upload mesos 
+  copy: src=/tmp/{{ mesos_file }} dest=/tmp/{{ mesos_file }}
+  when: st_mesos_src.stat.exists == false
+
+- name: check if mesos is already in build dir
+  stat: path={{ install_dir }}/{{ mesos_dir }}
+  register: st_mesos_dest
+
+- file: path={{ install_dir }}/{{ mesos_dir }}/build state=directory
+  remote_user: "{{ username }}"
+  become: yes
+
+- name: Extract mesos remotely
+  unarchive: src=/tmp/{{ mesos_file }} dest={{ install_dir }} owner={{ username }} copy=no
+  when: st_mesos_dest.stat.exists == false
+
+- name: check if mesos has been build-essential
+  stat: path={{ install_dir }}/{{ mesos_dir }}/build/bin/mesos.sh
+  register: st_mesos_build 
+
+- name: configure mesos
+  shell: ../configure 
+  args:
+      chdir: "{{ install_dir }}/{{ mesos_dir }}/build"
+  when: st_mesos_build.stat.exists == false
+
+- name: build mesos
+  command: /usr/bin/make -j4
+  args:
+      chdir: "{{ install_dir }}/{{ mesos_dir }}/build"
+  when: st_mesos_build.stat.exists == false
+  ignore_errors: true
+
+- name: delete built mesos package
+  file: path={{ install_dir }}/{{ mesos_file }} state=absent
+
+- name: compress mesos
+  command: tar -czf {{ mesos_file }} {{ mesos_dir }}
+  args:
+      chdir: "{{ install_dir }}/"

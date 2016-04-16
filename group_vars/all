@@ -1,0 +1,32 @@
+---
+mesos_version: 0.28.1
+mesos_dir: mesos-{{ mesos_version }}
+mesos_file: "{{ mesos_dir }}.tar.gz"
+
+zookeeper_version: 3.4.8
+zookeeper_dir: zookeeper-{{ zookeeper_version }}
+zookeeper_file: "{{ zookeeper_dir }}.tar.gz"
+
+marathon_version: "1.0.0-RC1"
+marathon_file: "marathon-{{ marathon_version }}.tgz"
+marathon_download: http://downloads.mesosphere.com/marathon/v{{ marathon_version }}/{{ marathon_file }}
+marathon_dir: "marathon-{{ marathon_version }}"
+
+username: ajazam
+
+home: /home/{{ username }}
+
+install_dir: "{{ home }}"
+build_dir: /tmp/build
+
+download_location: http://archive.apache.org/dist/mesos/{{ mesos_version }}/mesos-{{ mesos_version }}.tar.gz
+
+zk_url: zk://{%- for host in groups.zookeeper -%}{{ host }}:2181{%if not loop.last %},{%- endif -%}{%- endfor -%}/mesos
+
+mesos_masters_url: zk://{%- for host in groups.master -%}{{ host }}:2181{%if not loop.last %},{%- endif -%}{%- endfor -%}/mesos
+
+builder_host: "{%- for host in groups.builder -%}{{ host }}{%- endfor -%}"
+
+quorum: "{%- if (groups.zookeeper|count) > 2 -%} {{groups.zookeeper|count//2 + 1}} {%- else -%} {{1}} {% endif %}"
+
+cluster_name: Borgling

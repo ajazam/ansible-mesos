@@ -1,0 +1,8 @@
+---
+- hosts: agent
+  remote_user: "{{ username }}"
+  gather_facts: true
+  become: yes
+  roles:
+    - common
+    - mesos_agent

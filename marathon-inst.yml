@@ -1,0 +1,8 @@
+---
+- hosts: marathon
+  remote_user: "{{ username }}"
+  gather_facts: yes
+  become: yes
+  roles:
+    - common
+    - marathon

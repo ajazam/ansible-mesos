@@ -1,0 +1,10 @@
+---
+- hosts: zookeeper
+  remote_user: "{{ username }}"
+  gather_facts: true
+  become: yes
+  roles:
+    - common
+    - zookeeper
+#    - mesos_master
+#    - marathon

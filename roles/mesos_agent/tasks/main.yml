@@ -1,0 +1,60 @@
+---
+
+- name: stop supervisord
+  service: name=supervisor state=stopped
+  ignore_errors: true
+
+- name: copy mesos-master supervisord script file
+  template: src=mesos_agent_script.conf dest=/etc/supervisor/conf.d/mesos_agent_script.conf force=yes
+
+- file: path=/var/lib/mesos/data state=directory
+
+- file: path=/var/log/mesos state=directory
+
+- file: path=/etc/mesos-slave state=directory
+
+- apt: update_cache=yes
+
+- name: update APT to work with https
+  apt: name={{ item }} state=present
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+
+- name: add docker GPG key
+  apt_key: keyserver=hkp://p80.pool.sks-keyservers.net:80 id=58118E89F3A912897C070ADBF76221572C52609D
+
+- name: add Ubuntu 14.04 (LTS) repo
+  apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+
+- name: install linux image extras
+  shell: "apt-get -y install linux-image-extra-$(uname -r)"
+
+- name: install docker engine
+  apt: name={{ item }}
+  with_items:
+    - docker-engine
+    - apparmor
+
+- name: start and enable docker service
+  service: name=docker state=started enabled=yes
+
+- name: start supervisord
+  service: name=supervisor state=started
+  ignore_errors: true
+
+- name: reread supervisord configuration
+  supervisorctl: name=mesos_agent_script state=present
+  ignore_errors: true
+
+- name: stop supervisord configuration/
+  supervisorctl: name=mesos_agent_script state=stopped
+  ignore_errors: true
+
+- name: start update supervisord configuration
+  supervisorctl: name=mesos_agent_script state=started
+  ignore_errors: true
+
+- name: restart update supervisord configuration
+  supervisorctl: name=mesos_agent_script state=restarted
+  ignore_errors: true

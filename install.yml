@@ -1,0 +1,26 @@
+---
+- include: vsftpd.yml
+
+- hosts: master:agent
+  remote_user: "{{ username }}"
+  become: yes
+  become_user: root
+  gather_facts: false
+
+- hosts: builder
+  remote_user: "{{ username }}"
+  become: yes
+  become_user: root
+  gather_facts: false
+  tasks: 
+    - include: tasks/build_mesos.yml
+
+- include: tasks/deploymesos.yml
+
+- include: masters.yml
+
+- include: agents.yml
+
+- include: zookeeper.yml
+
+- include: marathon-inst.yml

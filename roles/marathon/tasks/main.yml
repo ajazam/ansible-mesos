@@ -1,0 +1,49 @@
+---
+- name: check if marathon is in /tmp
+  stat: path=/tmp/{{ marathon_file }}
+  register: st_marathon_src
+
+- name: fetch marathon
+  command: wget -P /tmp http://downloads.mesosphere.com/marathon/v{{ marathon_version }}/{{ marathon_file }}
+  when: st_marathon_src.stat.exists == false
+
+- name: check if marathon is in home
+  stat: path={{ install_dir }}/{{ marathon_file }}
+  register: st_marathon_dest
+
+- name: install tar/unzip
+  apt: name={{ item }} state=installed
+  with_items:
+    - tar
+    - unzip  
+
+- name: extract marathon remotely
+  # command: /bin/tar -zxvf /tmp/{{ marathon_file }} -C {{ install_dir }}
+  unarchive: src=/tmp/{{ marathon_file }} dest={{ install_dir }} copy=no
+  when: st_marathon_dest.stat.exists == false
+
+- name: stop supervirsord
+  service: name=supervisor state=stopped
+
+- name: copy marathon-supervisord script file
+  template: src=marathon_script.conf dest=/etc/supervisor/conf.d/marathon_script.conf force=yes
+
+- name: copy marathon secret file
+  template: src=marathon.secret dest={{ home }}/marathon.secret force=yes
+
+- name: start supervisord
+  service: name=supervisor state=started
+
+- name: reread supervisord configuration
+  supervisorctl: name=marathon_script state=present
+
+- name: stop supervisord configuration/
+  supervisorctl: name=marathon_script state=stopped
+
+- name: start update supervisord configuration
+  supervisorctl: name=marathon_script state=started
+
+- name: restart update supervisord configuration
+  supervisorctl: name=marathon_script state=restarted
+
+#  command: tar -zxvf /tmp/{{ zookeeper_file }} -C {{ install_dir}}

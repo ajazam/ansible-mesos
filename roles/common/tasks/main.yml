@@ -1,0 +1,36 @@
+---
+
+- name: remove old java
+  apt: name={{ item }} state=absent
+  with_items:
+    - openjdk-7-jdk
+    - openjdk-7-jre
+    - openjdk-7-headless
+    - java-7-openjdk-amd64
+
+- name: add java 8 repo
+  apt_repository: repo='ppa:webupd8team/java'
+
+- name: update apt
+  apt: update_cache=yes
+
+- name: accept oracle license 
+  debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+
+- name: install jdk
+  apt: name=oracle-java8-installer state=present
+
+- name: Install Mesos dependencies  
+  apt: name={{ item }} state=present
+  with_items:
+    - oracle-java8-installer
+    - build-essential
+    - python-dev
+    - python-boto
+    - libcurl4-nss-dev
+    - libsasl2-dev
+    - maven
+    - libapr1-dev
+    - libsvn-dev
+    - supervisor
+    - curl

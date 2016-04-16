@@ -1,0 +1,43 @@
+---
+
+
+# 
+# TRANSFER BUILT FILES TO AGENTS HOSTS
+# 
+
+- name: show host details
+  debug: msg= "{{ ansible_default_ipv4 }}"
+
+- name: stop supervisord
+  service: name=supervisor state=stopped
+
+- name: copy mesos-master supervisord script file
+  template: src=mesos_master_script.conf dest=/etc/supervisor/conf.d/mesos_master_script.conf
+
+- name: copy credentials file
+  template: src=credentials dest={{ home }}/credentials  
+
+- file: path=/var/lib/mesos/data state=directory
+
+- file: path=/var/log/mesos state=directory
+
+- file: path=/var/log/supervisor state=directory
+
+- name: start supervisord
+  service: name=supervisor state=started
+
+- name: reread supervisord configuration
+  supervisorctl: name=mesos_master_script state=present
+
+- name: stop supervisord configuration
+  supervisorctl: name=mesos_master_script state=stopped
+
+- name: start update supervisord configuration
+  supervisorctl: name=mesos_master_script state=started
+
+- name: restart update supervisord configuration
+  supervisorctl: name=mesos_master_script state=restarted
+
+- debug: msg="---zk is {{ zk_url }}" 
+
+- debug: msg="---marathon master {{ mesos_masters_url }}"

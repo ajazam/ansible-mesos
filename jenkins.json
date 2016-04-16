@@ -1,0 +1,40 @@
+{
+    "id": "jks",
+    "cmd": null,
+    "cpus": 1,
+    "mem": 512,
+    "disk": 1000,
+    "instances": 1,
+    "container": {
+        "docker": {
+            "image": "jenkins",
+            "network": "HOST"
+        },
+        "type": "DOCKER",
+        "volumes": [{
+            "hostPath": "/var/jenkins_home",
+
+            "containerPath": "jenkins_home",
+            "mode": "RW"
+        }, {
+
+            "containerPath": "jenkins_home",
+            "persistent": {
+                "size": 200
+            },
+            "mode": "RW"
+        }]
+    },
+    "portDefinitions": [{
+        "port": 8080,
+        "protocol": "tcp",
+        "name": null
+    }, {
+        "port": 50000,
+        "protocol": "tcp",
+        "name": null
+    }],
+    "env": {},
+    "labels": {},
+    "healthChecks": []
+}

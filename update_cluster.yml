@@ -1,0 +1,9 @@
+---
+- hosts: all
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks: 
+  - name: update apt
+    apt:  update_cache=yes upgrade=full
+ 

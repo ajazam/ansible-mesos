@@ -1,0 +1,13 @@
+- hosts: all:!builder
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks: 
+    - name: clear local directory
+      file: path={{ install_dir }}/{{ mesos_dir }} state=absent
+
+    - name: get mesos from master
+      get_url: url=ftp://anonymous:pass@172.16.2.64/{{ mesos_file }} dest={{ install_dir }}
+
+    - name: unarchive mesos package
+      command: /bin/tar -zxvf {{ install_dir }}/{{ mesos_file }}

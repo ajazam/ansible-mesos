@@ -1,0 +1,62 @@
+---
+- hosts: all
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: stop supervisor
+      service: name=supervisor state=stopped
+      ignore_errors: true
+
+    - name: stop supervisord
+      service: name=supervisor state=stopped
+      ignore_errors: true
+
+    - name: remove supervisord
+      apt: name=supervisor state=absent
+      ignore_errors: true
+
+    - name: remove vsftpd
+      apt: name=vsftpd state=absent
+      ignore_errors: true
+
+    - name: stop docker engine
+      service: name=docker state=stopped 
+      ignore_errors: true
+
+    - name: remove docker engine
+      apt: name=docker-engine state=absent
+      ignore_errors: true  
+
+    - name: erase supervisor scripts
+      file: path={{ item }} state=absent
+      with_items:
+        - /etc/supervisor/conf.d/marathon_script.conf
+        - /etc/supervisor/conf.d/mesos_master_script.conf
+        - /etc/supervisor/conf.d/mesos_agent_script.conf
+        - /etc/supervisor/conf.d/zookeeper_script.conf
+        - "{{ install_dir }}/{{ mesos_dir }}"
+        - "{{ install_dir }}/{{ zookeeper_dir }}"
+        - "{{ install_dir }}/{{ marathon_dir }}"
+        - /var/log/mesos.err.log
+        - /var/log/mesos.out.log
+        - /var/log/zookeeper.err.log
+        - /var/log/zookeeper.out.log
+        - /var/log/marathon.*
+        - /var/log/mesos
+        - /var/log/supervisor
+        - "{{ build_dir }}"
+        - /etc/mesos-slave
+        - /var/lib/mesos
+      ignore_errors: true
+
+    - name: delete remainder of files
+      shell: rm -rf *
+      args: 
+        chdir: "{{ home }}"
+      ignore_errors: true  
+
+    - name: delete zookeeper data
+      become_user: root
+      command: rm -rf /var/lib/zookeeper
+      ignore_errors: true

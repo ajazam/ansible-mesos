@@ -1,0 +1,45 @@
+---
+    - name: check if zookeeper is in /tmp
+      stat: path=/tmp/{{ zookeeper_file }}
+      register: st_zookeeper_src
+
+    - name: fetch zookeeper
+      command: wget -P /tmp http://www.apache.org/dist/zookeeper/zookeeper-{{ zookeeper_version }}/zookeeper-{{ zookeeper_version }}.tar.gz
+      when: st_zookeeper_src.stat.exists == false
+
+    - name: check if zookeeper is home
+      stat: path={{ install_dir }}/{{ zookeeper_dir }}
+      register: st_zookeeper_dest 
+
+    - name: extract zookeeper remotely
+      command: /bin/tar -zxvf /tmp/{{ zookeeper_file }} -C {{ install_dir}}
+
+    - name: stop supervisord
+      service: name=supervisor state=stopped
+
+    - name: copy zookeeper-supervisord script file
+      template: src=zookeeper_script.conf dest=/etc/supervisor/conf.d/zookeeper_script.conf
+
+    - file: path=/var/lib/zookeeper/data state=directory
+
+    - name: copy zookeeper conf file
+      template: src=zoo.cfg dest={{ install_dir}}/{{ zookeeper_dir }}/conf backup=yes
+
+    - name: copy myid file
+      template: src=myid dest=/var/lib/zookeeper/data/
+
+    - name: start supervisord
+      service: name=supervisor state=started
+      ignore_errors: true
+
+    - name: reread supervisord configuration
+      supervisorctl: name=zookeeper_script state=present
+
+    - name: stop supervisord configuration/
+      supervisorctl: name=zookeeper_script state=stopped
+
+    - name: start update supervisord configuration
+      supervisorctl: name=zookeeper_script state=started
+
+    - name: restart update supervisord configuration
+      supervisorctl: name=zookeeper_script state=restarted

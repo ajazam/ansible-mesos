@@ -1,0 +1,22 @@
+---
+- name: check if marathon is in /tmp
+  stat: path=/tmp/{{ marathon_file }}
+  register: st_marathon_src
+
+- name: fetch marathon
+  command: wget -P {{ marathon_download }}
+  when: st_marathon_src.stat.exists == false
+
+- name: check if marathon is in home
+  stat: path= {{ install_dir }}/{{ marathon_file }}
+  register: st_marathon_dest
+
+- name: extract marathon remotely
+  unarchive: src=/tmp/{{ marathon_file }} dest={{ install_dir }} copy=no
+  when: st_marathon_dest.stat.exists == false
+
+- name: stop supervirsord
+  service: name=supervisor state=stopped
+
+- name: copy marathon-supervisord script file
+  template: src=marathon_script.conf dest=/etc/supervisor/conf.d/marathon_script.conf force=yes

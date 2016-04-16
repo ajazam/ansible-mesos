@@ -1,0 +1,17 @@
+---
+- hosts: builder
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks: 
+    - name: install vsftp
+      apt: name=vsftpd state=installed
+
+    - name: change ftp user home directory
+      command: usermod -d {{ install_dir }} ftp
+
+    - name: allow anonymous logins
+      lineinfile: dest=/etc/vsftpd.conf regexp='^anonymous_enable\=NO' line='anonymous_enable=YES' state=present
+
+    - name: restart vsftpd
+      service: name=vsftpd state=restarted

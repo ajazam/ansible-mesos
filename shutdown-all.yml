@@ -1,0 +1,9 @@
+---
+- hosts: master:agent
+  remote_user: "{{ username }}"
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: shutdown
+      command: shutdown -h -P now
+      ignore_errors: true
